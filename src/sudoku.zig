@@ -168,31 +168,34 @@ pub const Sudoku = struct {
     }
 
     pub fn isSolved(self: *Sudoku) !bool {
-        // TODO: change the implementation from using hash map to using an array
-        var hashMap = std.AutoHashMap(SudokuCell, bool).init(std.heap.c_allocator);
-        defer hashMap.deinit();
-        // assert(self.game);
+        var arr: [MAX_CELL_VALUE]bool = undefined;
         // checks if all the blocks are valid
         for (0..3) |blockY| {
             for (0..3) |blockX| {
                 for (0..BLOCK_HEIGHT) |row| {
                     for (0..BLOCK_WIDTH) |col| {
-                        // TODO: check if this can replace the count check
-                        // if (hashMap.get(self.game[(blockY * 3) + row][(blockX * 3) + col], true)) {
-                        //     return false;
-                        // }
-                        try hashMap.put(self.game[(blockY * BLOCK_HEIGHT) + row][(blockX * BLOCK_WIDTH) + col], true);
+                        if (self.game[(blockY * BLOCK_HEIGHT) + row][(blockX * BLOCK_WIDTH) + col].value == 0) {
+                            return false;
+                        }
+                        arr[self.game[(blockY * BLOCK_HEIGHT) + row][(blockX * BLOCK_WIDTH) + col].value - 1] = true;
                     }
                 }
-                if (hashMap.count() != GRID_SIZE) return false;
-                hashMap.clearRetainingCapacity();
+                // checks if all the values are present
+                for (arr) |value| {
+                    if (value == false) {
+                        return false;
+                    }
+                }
+                // clears the arr to check the next block
+                arr = std.mem.zeroes([MAX_CELL_VALUE]bool);
             }
         }
         // checks if all the rows are valid
         for (self.game) |row| {
+            // clears the arr to check the next row
+            arr = std.mem.zeroes([MAX_CELL_VALUE]bool);
             for (row) |cell| {
                 assert(cell.value >= MIN_CELL_VALUE and cell.value <= MAX_CELL_VALUE);
-                var arr: [GRID_SIZE]bool = std.mem.zeroes([GRID_SIZE]bool);
                 if (arr[cell.value - 1] == true) {
                     return false;
                 }
@@ -202,9 +205,10 @@ pub const Sudoku = struct {
         transpose(SudokuCell, &self.game);
         // checks if all the columns are valid
         for (self.game) |row| {
+            // clears the arr to check the next column
+            arr = std.mem.zeroes([MAX_CELL_VALUE]bool);
             for (row) |cell| {
                 assert(cell.value >= MIN_CELL_VALUE and cell.value <= MAX_CELL_VALUE);
-                var arr: [GRID_SIZE]bool = std.mem.zeroes([GRID_SIZE]bool);
                 if (arr[cell.value - 1] == true) {
                     return false;
                 }
@@ -219,10 +223,8 @@ pub const Sudoku = struct {
         for (self.game) |row| {
             for (row) |cell| {
                 try stdout.print("{any}, ", .{cell.value});
-                // std.debug.print("{any}, ", .{cell.value});
             }
             try stdout.print("\n", .{});
-            // std.debug.print("\n", .{});
         }
     }
 };
@@ -261,15 +263,6 @@ test "testing swap function" {
     try expect(a == @as(u8, 10) and b == @as(u8, 5));
     swap(u8, &a, &b);
     try expect(a == @as(u8, 5) and b == @as(u8, 10));
-}
-
-test "usage of ArrayHashMap" {
-    const testAllocator = std.testing.allocator;
-    var hashMap = std.AutoHashMap(u8, bool).init(testAllocator);
-    defer hashMap.deinit();
-
-    try hashMap.put(0, true);
-    try hashMap.put(1, false);
 }
 
 test "isValid function test" {
