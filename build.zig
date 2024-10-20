@@ -23,7 +23,6 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    exe.linkLibC();
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
@@ -63,8 +62,6 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    exe_unit_tests.linkLibC();
-    exe_unit_tests_sudoku.linkLibC();
 
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
     const run_exe_unit_tests_sudoku = b.addRunArtifact(exe_unit_tests_sudoku);
