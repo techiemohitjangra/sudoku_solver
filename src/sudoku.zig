@@ -170,6 +170,7 @@ pub const Sudoku = struct {
     pub fn isSolved(self: *Sudoku) !bool {
         // TODO: change the implementation from using hash map to using an array
         var hashMap = std.AutoHashMap(SudokuCell, bool).init(std.heap.c_allocator);
+        defer hashMap.deinit();
         // assert(self.game);
         // checks if all the blocks are valid
         for (0..3) |blockY| {
