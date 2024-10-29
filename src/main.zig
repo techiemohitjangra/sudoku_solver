@@ -14,7 +14,7 @@ pub fn main() !void {
         [sudoku.GRID_SIZE]sudoku.SudokuCell{ sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 7, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 4, .type = sudoku.CellType.Fixed } },
         [sudoku.GRID_SIZE]sudoku.SudokuCell{ sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 5, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 2, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 6, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 3, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable } },
     } };
-    try game.solve();
-    try game.print();
-    try expect(try game.isSolved());
+    game.solve();
+    game.print();
+    try expect(game.isSolved());
 }

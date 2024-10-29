@@ -1,4 +1,5 @@
 const std = @import("std");
+const util = @import("util.zig");
 const expect = std.testing.expect;
 const assert = std.debug.assert;
 const rand = std.crypto.random;
@@ -20,62 +21,73 @@ pub const SudokuCell = struct {
     type: CellType = CellType.Variable,
 };
 
-pub fn swapXOR(comptime T: type, first: *T, second: *T) void {
-    switch (T) {
-        SudokuCell => {
-            first.*.value = second.*.value ^ first.*.value;
-            second.*.value = second.*.value ^ first.*.value;
-            first.*.value = second.*.value ^ first.*.value;
-        },
-        else => {
-            first.* = second.* ^ first.*;
-            second.* = second.* ^ first.*;
-            first.* = second.* ^ first.*;
-        },
-    }
-}
+const Range = struct {
+    start: u8,
+    end: u8,
+};
 
-pub fn swap(comptime T: type, first: *T, second: *T) void {
-    const temp: T = first.*;
-    first.* = second.*;
-    second.* = temp;
-}
+pub const GameDifficulty = enum {
+    Easy,
+    Medium,
+    Hard,
 
-pub fn transpose(comptime T: type, sudoku: *[GRID_SIZE][GRID_SIZE]T) void {
-    for (0..sudoku.len) |y| {
-        for (y + 1..sudoku[y].len) |x| {
-            if (x == y) {
-                continue;
-            } else {
-                swap(T, &sudoku[y][x], &sudoku[x][y]);
-            }
+    pub fn getFillCellRange(self: GameDifficulty) Range {
+        switch (self) {
+            GameDifficulty.Easy => {
+                return Range{ .start = 32, .end = 45 };
+            },
+            GameDifficulty.Medium => {
+                return Range{ .start = 21, .end = 32 };
+            },
+            GameDifficulty.Hard => {
+                return Range{ .start = 17, .end = 21 };
+            },
         }
     }
-}
+};
 
 pub const Sudoku = struct {
     game: [GRID_SIZE][GRID_SIZE]SudokuCell = undefined,
+    difficulty: GameDifficulty = GameDifficulty.Easy,
 
     pub fn init(self: *Sudoku) void {
-        // _ = self.generate(0, 0);
         _ = self;
     }
 
-    // TODO: implement generate
-    // pub fn generate(self: *Sudoku, x: u8, y: u8) bool {
-    //     assert(x >= 0 and x < GRID_SIZE);
-    //     assert(y >= 0 and y < GRID_SIZE);
-    //     var possibleValue: u8 = rand.uintAtMost(u8, MAX_CELL_VALUE);
-    //
-    //     while (!self.isValid(possibleValue, x, y)) {
-    //         possibleValue = rand.uintAtMost(u8, MAX_CELL_VALUE);
-    //     } else {
-    //         self.game[y][x].value = possibleValue;
-    //     }
-    //     return false;
-    // }
+    pub fn reset(self: *Sudoku) void {
+        for (&self.game) |*row| {
+            for (row) |*cell| {
+                cell.value = 0;
+                cell.type = CellType.Variable;
+            }
+        }
+    }
 
-    fn isValid(self: *Sudoku, value: u8, x: u8, y: u8) bool {
+    pub fn generate(self: *Sudoku) void {
+        const fillCellRange: Range = self.difficulty.getFillCellRange();
+        const fillCount: u8 = rand.intRangeAtMost(u8, fillCellRange.start, fillCellRange.end);
+        var count: usize = 0;
+        while (count < fillCount) {
+            const value = rand.uintLessThan(u8, 9) + 1;
+            const x = rand.uintLessThan(u8, 9);
+            const y = rand.uintLessThan(u8, 9);
+            if (self.game[y][x].value == 0 and self.isSafeValue(value, x, y)) {
+                self.game[y][x].value = value;
+                self.game[y][x].type = CellType.Fixed;
+                var copy: Sudoku = self.*;
+                // TODO: change this from copy.solveNext() to self.solveNext() after fixing how the solve function works
+                if (copy.solveNext(0, 0)) {
+                    count += 1;
+                } else {
+                    self.game[y][x].value = 0;
+                    self.game[y][x].type = CellType.Variable;
+                }
+                count += 1;
+            }
+        }
+    }
+
+    fn isSafeValue(self: *const Sudoku, value: u8, x: u8, y: u8) bool {
         assert(value >= MIN_CELL_VALUE and value <= MAX_CELL_VALUE);
         assert(x >= 0 and x < GRID_SIZE);
         assert(y >= 0 and y < GRID_SIZE);
@@ -115,25 +127,19 @@ pub const Sudoku = struct {
     }
 
     // Solves the sudoku regardless of the current state
-    pub fn solve(self: *Sudoku) !void {
+    // TODO: fix how solve next handles unsolvable games
+    pub fn solve(self: *Sudoku) void {
         const solved = self.solveNext(0, 0);
-        if (solved and try self.isSolved()) {
+        if (solved and self.isSolved()) {
             return;
+        } else {
+            std.debug.print("could not solve\n", .{});
         }
     }
 
     fn solveNext(self: *Sudoku, x: u8, y: u8) bool {
         assert(0 <= x and x < GRID_SIZE);
         assert(0 <= y and y < GRID_SIZE);
-        if (y == GRID_SIZE - 1 and x == GRID_SIZE - 1) {
-            for (0..GRID_SIZE) |possibleValue| {
-                assert(MIN_CELL_VALUE <= (possibleValue + 1) and (possibleValue + 1) <= MAX_CELL_VALUE);
-                if (self.isValid(@as(u8, @intCast(possibleValue + 1)), x, y)) {
-                    self.game[y][x].value = @as(u8, @intCast(possibleValue + 1));
-                    return true;
-                }
-            }
-        }
 
         if (self.game[y][x].type == CellType.Fixed) {
             if (x < GRID_SIZE - 1) {
@@ -147,10 +153,13 @@ pub const Sudoku = struct {
             }
             return false;
         } else {
-            for (0..GRID_SIZE) |possibleValue| {
+            for (0..MAX_CELL_VALUE) |possibleValue| {
                 assert(MIN_CELL_VALUE <= (possibleValue + 1) and (possibleValue + 1) <= MAX_CELL_VALUE);
-                if (self.isValid(@as(u8, @intCast(possibleValue + 1)), x, y)) {
+                if (self.isSafeValue(@as(u8, @intCast(possibleValue + 1)), x, y)) {
                     self.game[y][x].value = @as(u8, @intCast(possibleValue + 1));
+                    if (y == GRID_SIZE - 1 and x == GRID_SIZE - 1) {
+                        return true;
+                    }
                     if (x < GRID_SIZE - 1) {
                         if (self.solveNext(x + 1, y)) {
                             return true;
@@ -167,7 +176,7 @@ pub const Sudoku = struct {
         }
     }
 
-    pub fn isSolved(self: *Sudoku) !bool {
+    pub fn isSolved(self: *Sudoku) bool {
         var arr: [MAX_CELL_VALUE]bool = undefined;
         // checks if all the blocks are valid
         for (0..3) |blockY| {
@@ -202,7 +211,7 @@ pub const Sudoku = struct {
                 arr[cell.value - 1] = true;
             }
         }
-        transpose(SudokuCell, &self.game);
+        util.transpose(SudokuCell, &self.game);
         // checks if all the columns are valid
         for (self.game) |row| {
             // clears the arr to check the next column
@@ -218,13 +227,12 @@ pub const Sudoku = struct {
         return true;
     }
 
-    pub fn print(self: *const Sudoku) !void {
-        const stdout = std.io.getStdOut().writer();
+    pub fn print(self: *const Sudoku) void {
         for (self.game) |row| {
             for (row) |cell| {
-                try stdout.print("{any}, ", .{cell.value});
+                std.debug.print("{any}, ", .{cell.value});
             }
-            try stdout.print("\n", .{});
+            std.debug.print("\n", .{});
         }
     }
 };
@@ -252,26 +260,26 @@ test "testing transpose function" {
         [GRID_SIZE]u8{ 8, 17, 26, 35, 44, 53, 62, 71, 80 },
         [GRID_SIZE]u8{ 9, 18, 27, 36, 45, 54, 63, 72, 81 },
     };
-    transpose(u8, &mat);
+    util.transpose(u8, &mat);
     try expect(std.mem.eql([GRID_SIZE]u8, &mat, &tranposedMat));
 }
 
-test "testing swap function" {
+test "swap function" {
     var a: u8 = 5;
     var b: u8 = 10;
-    swap(u8, &a, &b);
+    util.swap(u8, &a, &b);
     try expect(a == @as(u8, 10) and b == @as(u8, 5));
-    swap(u8, &a, &b);
+    util.swap(u8, &a, &b);
     try expect(a == @as(u8, 5) and b == @as(u8, 10));
 }
 
-test "isValid function test" {
+test "isSolved function for empty game" {
     var game = Sudoku{};
     _ = game.init();
-    try expect(!try game.isSolved());
+    try expect(!game.isSolved());
 }
 
-test "solve function test" {
+test "solve function" {
     var game = Sudoku{ .game = [GRID_SIZE][GRID_SIZE]SudokuCell{
         [GRID_SIZE]SudokuCell{ SudokuCell{ .value = 3, .type = CellType.Fixed }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 6, .type = CellType.Fixed }, SudokuCell{ .value = 5, .type = CellType.Fixed }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 8, .type = CellType.Fixed }, SudokuCell{ .value = 4, .type = CellType.Fixed }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 0, .type = CellType.Variable } },
         [GRID_SIZE]SudokuCell{ SudokuCell{ .value = 5, .type = CellType.Fixed }, SudokuCell{ .value = 2, .type = CellType.Fixed }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 0, .type = CellType.Variable } },
@@ -283,6 +291,14 @@ test "solve function test" {
         [GRID_SIZE]SudokuCell{ SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 7, .type = CellType.Fixed }, SudokuCell{ .value = 4, .type = CellType.Fixed } },
         [GRID_SIZE]SudokuCell{ SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 5, .type = CellType.Fixed }, SudokuCell{ .value = 2, .type = CellType.Fixed }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 6, .type = CellType.Fixed }, SudokuCell{ .value = 3, .type = CellType.Fixed }, SudokuCell{ .value = 0, .type = CellType.Variable }, SudokuCell{ .value = 0, .type = CellType.Variable } },
     } };
-    try game.solve();
-    try expect(try game.isSolved());
+    game.solve();
+    try expect(game.isSolved());
+}
+
+test "generate function" {
+    var game = Sudoku{ .difficulty = GameDifficulty.Hard };
+    game.reset();
+    game.generate();
+    game.solve();
+    try expect(game.isSolved());
 }
