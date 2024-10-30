@@ -10,6 +10,8 @@ pub const MIN_CELL_VALUE: u8 = 1;
 pub const DEFAULT_CELL_VALUE: u8 = 0;
 pub const BLOCK_HEIGHT: u8 = 3;
 pub const BLOCK_WIDTH: u8 = 3;
+pub const BLOCK_COUNT_Y: u8 = 3;
+pub const BLOCK_COUNT_X: u8 = 3;
 
 pub const CellType = enum {
     Fixed,
@@ -46,7 +48,8 @@ pub const Sudoku = struct {
     difficulty: GameDifficulty = GameDifficulty.Easy,
 
     pub fn init(self: *Sudoku) void {
-        _ = self;
+        self.clearAll();
+        self.generate();
     }
 
     pub fn clearAll(self: *Sudoku) void {
@@ -131,7 +134,6 @@ pub const Sudoku = struct {
     }
 
     // Solves the sudoku regardless of the current state
-    // TODO: fix how solve next handles unsolvable games
     pub fn solve(self: *Sudoku) void {
         const solved = self.solveNext(0, 0);
         if (solved and self.isSolved()) {
@@ -183,8 +185,8 @@ pub const Sudoku = struct {
     pub fn isSolved(self: *Sudoku) bool {
         var arr: [MAX_CELL_VALUE]bool = undefined;
         // checks if all the blocks are valid
-        for (0..3) |blockY| {
-            for (0..3) |blockX| {
+        for (0..BLOCK_COUNT_Y) |blockY| {
+            for (0..BLOCK_COUNT_X) |blockX| {
                 for (0..BLOCK_HEIGHT) |row| {
                     for (0..BLOCK_WIDTH) |col| {
                         if (self.game[(blockY * BLOCK_HEIGHT) + row][(blockX * BLOCK_WIDTH) + col].value == 0) {
@@ -228,6 +230,9 @@ pub const Sudoku = struct {
                 arr[cell.value - 1] = true;
             }
         }
+        // restores the game to its original state
+        util.transpose(SudokuCell, &self.game);
+
         return true;
     }
 
