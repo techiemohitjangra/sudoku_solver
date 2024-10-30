@@ -54,11 +54,21 @@ pub const Sudoku = struct {
         _ = self;
     }
 
-    pub fn reset(self: *Sudoku) void {
+    pub fn clearAll(self: *Sudoku) void {
         for (&self.game) |*row| {
             for (row) |*cell| {
                 cell.value = 0;
                 cell.type = CellType.Variable;
+            }
+        }
+    }
+
+    pub fn reset(self: *Sudoku) void {
+        for (&self.game) |*row| {
+            for (row) |*cell| {
+                if (cell.type == CellType.Variable) {
+                    cell.value = 0;
+                }
             }
         }
     }
@@ -74,9 +84,8 @@ pub const Sudoku = struct {
             if (self.game[y][x].value == 0 and self.isSafeValue(value, x, y)) {
                 self.game[y][x].value = value;
                 self.game[y][x].type = CellType.Fixed;
-                var copy: Sudoku = self.*;
-                // TODO: change this from copy.solveNext() to self.solveNext() after fixing how the solve function works
-                if (copy.solveNext(0, 0)) {
+                if (self.solveNext(0, 0)) {
+                    self.reset();
                     count += 1;
                 } else {
                     self.game[y][x].value = 0;
@@ -297,7 +306,7 @@ test "solve function" {
 
 test "generate function" {
     var game = Sudoku{ .difficulty = GameDifficulty.Hard };
-    game.reset();
+    game.clearAll();
     game.generate();
     game.solve();
     try expect(game.isSolved());
