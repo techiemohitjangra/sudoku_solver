@@ -21,26 +21,21 @@ pub const SudokuCell = struct {
     type: CellType = CellType.Variable,
 };
 
-const Range = struct {
-    start: u8,
-    end: u8,
-};
-
 pub const GameDifficulty = enum {
     Easy,
     Medium,
     Hard,
 
-    pub fn getFillCellRange(self: GameDifficulty) Range {
+    pub fn getFillCellRange(self: GameDifficulty) util.Range {
         switch (self) {
             GameDifficulty.Easy => {
-                return Range{ .start = 32, .end = 45 };
+                return util.Range{ .start = 32, .end = 45 };
             },
             GameDifficulty.Medium => {
-                return Range{ .start = 21, .end = 32 };
+                return util.Range{ .start = 21, .end = 32 };
             },
             GameDifficulty.Hard => {
-                return Range{ .start = 17, .end = 21 };
+                return util.Range{ .start = 17, .end = 21 };
             },
         }
     }
@@ -74,7 +69,7 @@ pub const Sudoku = struct {
     }
 
     pub fn generate(self: *Sudoku) void {
-        const fillCellRange: Range = self.difficulty.getFillCellRange();
+        const fillCellRange: util.Range = self.difficulty.getFillCellRange();
         const fillCount: u8 = rand.intRangeAtMost(u8, fillCellRange.start, fillCellRange.end);
         var count: usize = 0;
         while (count < fillCount) {

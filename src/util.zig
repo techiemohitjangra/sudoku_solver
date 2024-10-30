@@ -1,5 +1,10 @@
 const Sudoku = @import("sudoku.zig");
 
+pub const Range = struct {
+    start: u8,
+    end: u8,
+};
+
 pub fn swapXOR(comptime T: type, first: *T, second: *T) void {
     switch (T) {
         Sudoku.SudokuCell => {
