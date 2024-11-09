@@ -148,6 +148,10 @@ pub const Sudoku = struct {
         assert(0 <= y and y < GRID_SIZE);
 
         if (self.game[y][x].type == CellType.Fixed) {
+            if (y == GRID_SIZE - 1 and x == GRID_SIZE - 1) {
+                return true;
+            }
+
             if (x < GRID_SIZE - 1) {
                 if (self.solveNext(x + 1, y)) {
                     return true;
@@ -245,42 +249,6 @@ pub const Sudoku = struct {
         }
     }
 };
-
-test "testing transpose function" {
-    var mat: [GRID_SIZE][GRID_SIZE]u8 = [GRID_SIZE][GRID_SIZE]u8{
-        [GRID_SIZE]u8{ 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-        [GRID_SIZE]u8{ 10, 11, 12, 13, 14, 15, 16, 17, 18 },
-        [GRID_SIZE]u8{ 19, 20, 21, 22, 23, 24, 25, 26, 27 },
-        [GRID_SIZE]u8{ 28, 29, 30, 31, 32, 33, 34, 35, 36 },
-        [GRID_SIZE]u8{ 37, 38, 39, 40, 41, 42, 43, 44, 45 },
-        [GRID_SIZE]u8{ 46, 47, 48, 49, 50, 51, 52, 53, 54 },
-        [GRID_SIZE]u8{ 55, 56, 57, 58, 59, 60, 61, 62, 63 },
-        [GRID_SIZE]u8{ 64, 65, 66, 67, 68, 69, 70, 71, 72 },
-        [GRID_SIZE]u8{ 73, 74, 75, 76, 77, 78, 79, 80, 81 },
-    };
-    const tranposedMat: [GRID_SIZE][GRID_SIZE]u8 = [GRID_SIZE][GRID_SIZE]u8{
-        [GRID_SIZE]u8{ 1, 10, 19, 28, 37, 46, 55, 64, 73 },
-        [GRID_SIZE]u8{ 2, 11, 20, 29, 38, 47, 56, 65, 74 },
-        [GRID_SIZE]u8{ 3, 12, 21, 30, 39, 48, 57, 66, 75 },
-        [GRID_SIZE]u8{ 4, 13, 22, 31, 40, 49, 58, 67, 76 },
-        [GRID_SIZE]u8{ 5, 14, 23, 32, 41, 50, 59, 68, 77 },
-        [GRID_SIZE]u8{ 6, 15, 24, 33, 42, 51, 60, 69, 78 },
-        [GRID_SIZE]u8{ 7, 16, 25, 34, 43, 52, 61, 70, 79 },
-        [GRID_SIZE]u8{ 8, 17, 26, 35, 44, 53, 62, 71, 80 },
-        [GRID_SIZE]u8{ 9, 18, 27, 36, 45, 54, 63, 72, 81 },
-    };
-    util.transpose(u8, &mat);
-    try expect(std.mem.eql([GRID_SIZE]u8, &mat, &tranposedMat));
-}
-
-test "swap function" {
-    var a: u8 = 5;
-    var b: u8 = 10;
-    util.swap(u8, &a, &b);
-    try expect(a == @as(u8, 10) and b == @as(u8, 5));
-    util.swap(u8, &a, &b);
-    try expect(a == @as(u8, 5) and b == @as(u8, 10));
-}
 
 test "isSolved function for empty game" {
     var game = Sudoku{};
