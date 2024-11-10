@@ -1,5 +1,4 @@
 const sudoku = @import("sudoku.zig");
-const util = @import("util.zig");
 const std = @import("std");
 const random = std.crypto.random;
 const expect = std.testing.expect;
@@ -82,15 +81,15 @@ test "transpose function" {
         [sudoku.GRID_SIZE]u8{ 8, 17, 26, 35, 44, 53, 62, 71, 80 },
         [sudoku.GRID_SIZE]u8{ 9, 18, 27, 36, 45, 54, 63, 72, 81 },
     };
-    util.transpose(u8, &mat);
+    transpose(u8, &mat);
     try expect(std.mem.eql([sudoku.GRID_SIZE]u8, &mat, &tranposedMat));
 }
 
 test "swap function" {
     var a: u8 = 5;
     var b: u8 = 10;
-    util.swap(u8, &a, &b);
+    swap(u8, &a, &b);
     try expect(a == @as(u8, 10) and b == @as(u8, 5));
-    util.swap(u8, &a, &b);
+    swap(u8, &a, &b);
     try expect(a == @as(u8, 5) and b == @as(u8, 10));
 }
