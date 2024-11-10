@@ -1,9 +1,17 @@
 const std = @import("std");
-const expect = std.testing.expect;
 const sudoku = @import("sudoku.zig");
+const expect = std.testing.expect;
 
 pub fn main() !void {
-    var game = sudoku.Sudoku{ .game = [sudoku.GRID_SIZE][sudoku.GRID_SIZE]sudoku.SudokuCell{
+    var game: sudoku.Sudoku = sudoku.Sudoku{ .difficulty = sudoku.GameDifficulty.Hard };
+    game.init();
+    game.print();
+    game.solve();
+    game.print();
+}
+
+test "game test" {
+    var game = sudoku.Sudoku{ .state = [sudoku.GRID_SIZE][sudoku.GRID_SIZE]sudoku.SudokuCell{
         [sudoku.GRID_SIZE]sudoku.SudokuCell{ sudoku.SudokuCell{ .value = 3, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 6, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 5, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 8, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 4, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable } },
         [sudoku.GRID_SIZE]sudoku.SudokuCell{ sudoku.SudokuCell{ .value = 5, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 2, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable } },
         [sudoku.GRID_SIZE]sudoku.SudokuCell{ sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 8, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 7, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 3, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 1, .type = sudoku.CellType.Fixed } },
@@ -15,6 +23,5 @@ pub fn main() !void {
         [sudoku.GRID_SIZE]sudoku.SudokuCell{ sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 5, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 2, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 6, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 3, .type = sudoku.CellType.Fixed }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable }, sudoku.SudokuCell{ .value = 0, .type = sudoku.CellType.Variable } },
     } };
     game.solve();
-    game.print();
     try expect(game.isSolved());
 }
