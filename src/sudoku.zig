@@ -271,11 +271,36 @@ pub const Sudoku = struct {
     }
 
     pub fn print(self: *const Sudoku) void {
-        for (self.state) |row| {
-            for (row) |cell| {
-                std.debug.print("{any}, ", .{cell.value});
+        for (0..self.state.len) |y| {
+            for (0..self.state[y].len - 1) |x| {
+                if (self.state[y][x].type == CellType.Fixed) {
+                    std.debug.print("\u{001b}[31m{any}, \u{001b}[m", .{self.state[y][x].value});
+                } else {
+                    std.debug.print("\u{001b}[32m{any}, \u{001b}[m", .{self.state[y][x].value});
+                }
             }
-            std.debug.print("\n", .{});
+            if (self.state[y][GRID_SIZE - 1].type == CellType.Fixed) {
+                std.debug.print("\u{001b}[31m{any} \u{001b}[m\n", .{self.state[y][GRID_SIZE - 1].value});
+            } else {
+                std.debug.print("\u{001b}[32m{any} \u{001b}[m\n", .{self.state[y][GRID_SIZE - 1].value});
+            }
+        }
+    }
+
+    pub fn printDebug(self: *const Sudoku) void {
+        for (0..self.state.len) |y| {
+            for (0..self.state[y].len - 1) |x| {
+                if (self.state[y][x].type == CellType.Fixed) {
+                    std.debug.print("\u{001b}[31m{any}({s: ^8}), \u{001b}[m", .{ self.state[y][x].value, @tagName(self.state[y][x].type) });
+                } else {
+                    std.debug.print("\u{001b}[32m{any}({s: ^8}), \u{001b}[m", .{ self.state[y][x].value, @tagName(self.state[y][x].type) });
+                }
+            }
+            if (self.state[y][GRID_SIZE - 1].type == CellType.Fixed) {
+                std.debug.print("\u{001b}[31m{any}({s: ^8}) \u{001b}[m\n", .{ self.state[y][GRID_SIZE - 1].value, @tagName(self.state[y][GRID_SIZE - 1].type) });
+            } else {
+                std.debug.print("\u{001b}[32m{any}({s: ^8}) \u{001b}[m\n", .{ self.state[y][GRID_SIZE - 1].value, @tagName(self.state[y][GRID_SIZE - 1].type) });
+            }
         }
     }
 };
