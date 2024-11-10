@@ -4,9 +4,13 @@ const expect = std.testing.expect;
 
 pub fn main() !void {
     var game: sudoku.Sudoku = sudoku.Sudoku{ .difficulty = sudoku.GameDifficulty.Hard };
+    std.debug.print("Initializing puzzle...\n", .{});
     game.init();
+    std.debug.print("Puzzle initialized.\n", .{});
     game.print();
+    std.debug.print("Solving puzzle...\n", .{});
     game.solve();
+    std.debug.print("Puzzle solved.\n", .{});
     game.print();
 }
 
